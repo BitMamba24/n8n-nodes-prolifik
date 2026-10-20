@@ -1,0 +1,73 @@
+# Lives in the public mirror BitMamba24/n8n-nodes-prolifik as
+# .github/workflows/publish.yml (kept upstream under .github-mirror,
+# where it never runs). Publishes the npm package
+# n8n-nodes-prolifik to npm with a provenance statement when a tag like
+# n8n-node-v0.1.0 is pushed. n8n only verifies community nodes published from
+# GitHub Actions with provenance (required since 2026-05-01).
+#
+# One-time setup (integrations/n8n/PUBLISHING.md has the full checklist):
+#   - npm: a Granular Access Token with read/write on n8n-nodes-prolifik
+#     (for the very first publish, on "all packages", since the package does
+#     not exist yet), saved as the repository secret NPM_TOKEN.
+#   - The tag's version must equal "version" in package.json.
+#
+# npm refuses provenance from a private repository, and n8n's verification
+# checks that the package's repository link is public. The first step stops
+# the run with that explanation instead of a cryptic npm 422.
+
+name: Publish n8n node
+
+on:
+  push:
+    tags:
+      - 'n8n-node-v*'
+
+permissions:
+  contents: read
+  # Mints the OIDC token npm uses to sign the provenance statement.
+  id-token: write
+
+concurrency:
+  group: n8n-node-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Refuse a private repository
+        if: ${{ github.event.repository.private }}
+        run: |
+          echo "::error::npm only signs provenance for public repositories, and n8n verification needs a public repository link. Publish from a public repository (see integrations/n8n/PUBLISHING.md)."
+          exit 1
+
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Check the tag matches package.json
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          if [ "${TAG#n8n-node-v}" != "$version" ]; then
+            echo "::error::Tag $TAG does not match package.json version $version."
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test
+
+      - name: Publish to npm with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

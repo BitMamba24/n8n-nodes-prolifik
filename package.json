@@ -1,0 +1,64 @@
+{
+	"name": "n8n-nodes-prolifik",
+	"version": "0.1.0",
+	"description": "n8n nodes for Prolifik: AI clips from long videos, branded short-form videos and social publishing.",
+	"license": "MIT",
+	"homepage": "https://getprolifik.com",
+	"keywords": [
+		"n8n-community-node-package",
+		"n8n",
+		"prolifik",
+		"video",
+		"clips",
+		"short-form video",
+		"social media"
+	],
+	"author": {
+		"name": "Prolifik",
+		"email": "info@getprolifik.com",
+		"url": "https://getprolifik.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/BitMamba24/n8n-nodes-prolifik.git"
+	},
+	"bugs": {
+		"url": "https://github.com/BitMamba24/n8n-nodes-prolifik/issues"
+	},
+	"engines": {
+		"node": ">=20.15"
+	},
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"test": "n8n-node build && node --test --test-reporter=spec test/*.test.js",
+		"prepublishOnly": "n8n-node lint && n8n-node build"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/ProlifikApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/Prolifik/Prolifik.node.js",
+			"dist/nodes/Prolifik/ProlifikTrigger.node.js"
+		]
+	},
+	"devDependencies": {
+		"@n8n/node-cli": "0.52.0",
+		"eslint": "9.32.0",
+		"n8n-workflow": "2.43.0",
+		"prettier": "3.6.2",
+		"typescript": "5.9.2"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	}
+}
